@@ -1,14 +1,14 @@
-name: Build Frontend Docker Image
+name: Build API Gateway Docker Image
 
 on:
   push:
     paths:
-      - 'frontend/**'
-      - '.github/workflows/frontend-build-docker-image.yml'
-    branches-ignore: [ 'master' ]
+      - 'api-gateway/**'
+      - '.github/workflows/gateway-build-and-push-docker-image.yml'
+    branches: [ main ]
 
 jobs:
-  build:
+  build-and-push:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -20,8 +20,8 @@ jobs:
       - name: Build Docker image
         uses: docker/build-push-action@v5
         with:
-          context: ./frontend
-          file: ./frontend/Dockerfile
+          context: ./api-gateway
+          file: ./api-gateway/Dockerfile
           push: false
           load: true
-          tags: salus-frontend:latest
+          tags: salus-api-gateway:latest 
