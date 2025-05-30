@@ -5,6 +5,7 @@ on:
     paths:
       - 'api-gateway/**'
       - '.github/workflows/gateway-build-and-push-docker-image.yml'
+    branches: [ '*' ]	
     branches-ignore: [ 'master' ]
 
 jobs:

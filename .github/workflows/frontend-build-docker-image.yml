@@ -5,6 +5,7 @@ on:
     paths:
       - 'frontend/**'
       - '.github/workflows/frontend-build-docker-image.yml'
+    branches: [ '*' ]
     branches-ignore: [ 'master' ]
 
 jobs:
