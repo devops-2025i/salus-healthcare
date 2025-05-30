@@ -4,8 +4,8 @@ on:
   push:
     paths:
       - 'frontend/**'
-      - '.github/workflows/frontend-docker.yml'
-    branches: [ main ]
+      - '.github/workflows/frontend-build-and-push-docker-image.yml'
+    branches: [ master ]
 
 jobs:
   build-and-push:
