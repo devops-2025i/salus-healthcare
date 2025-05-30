@@ -1,0 +1,48 @@
+services:
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - api-gateway
+      - appointment-service
+
+  api-gateway:
+    build:
+      context: ./api-gateway
+    ports:
+      - "8000:8000"
+    environment:
+      - APPOINTMENT_SERVICE_URL=http://appointment-service:8001
+
+  appointment-service:
+    build:
+      context: ./appointment-service
+    ports:
+      - "8001:8001"
+    environment:
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_NAME=appointments_db
+      - DB_USER=appuser
+      - DB_PASSWORD=apppassword
+    depends_on:
+      - mysql
+
+  mysql:
+    image: mysql:8.4
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: appointments_db
+      MYSQL_USER: appuser
+      MYSQL_PASSWORD: apppassword
+    ports:
+      - "3306:3306"
+    volumes:
+      # - mysql-data:/var/lib/mysql
+      - ./appointment-service/mysql-init:/docker-entrypoint-initdb.d
+
+# volumes:
+#   mysql-data: 
