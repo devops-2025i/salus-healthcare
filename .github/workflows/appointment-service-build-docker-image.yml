@@ -1,0 +1,27 @@
+name: Build and Push Appointment Service Docker Image
+
+on:
+  push:
+    paths:
+      - 'appointment-service/**'
+      - '.github/workflows/appointment-service-build-docker-image.yml'
+    branches-ignore: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./appointment-service
+          file: ./appointment-service/Dockerfile
+          push: false
+          load: true
+          tags: salus-appointment-service:latest 

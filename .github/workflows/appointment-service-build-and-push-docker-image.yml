@@ -4,8 +4,8 @@ on:
   push:
     paths:
       - 'appointment-service/**'
-      - '.github/workflows/appointment-service-docker.yml'
-    branches: [ main ]
+      - '.github/workflows/appointment-service-build-and-push-docker-image.yml'
+    branches: [ master ]
 
 jobs:
   build-and-push:
