@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { FormEvent } from 'react';
 import './App.css';
 
@@ -52,7 +52,7 @@ function App() {
       if (!res.ok) throw new Error('Login failed');
       const data = await res.json();
       setToken(data.access_token);
-    } catch (err) {
+    } catch {
       setError('Login failed');
     } finally {
       setLoading(false);
@@ -77,7 +77,6 @@ function App() {
 
   useEffect(() => {
     fetchAppointments();
-    // eslint-disable-next-line
   }, [token]);
 
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -100,7 +99,7 @@ function App() {
       if (!res.ok) throw new Error('Error creating appointment');
       setForm({ ...initialForm });
       fetchAppointments();
-    } catch (err) {
+    } catch {
       setError('Error creating appointment');
     } finally {
       setCreating(false);
@@ -117,7 +116,7 @@ function App() {
       });
       if (!res.ok) throw new Error('Error deleting appointment');
       fetchAppointments();
-    } catch (err) {
+    } catch {
       setError('Error deleting appointment');
     } finally {
       setLoading(false);
