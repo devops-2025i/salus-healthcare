@@ -46,7 +46,7 @@ jobs:
           uv pip install -r requirements.txt pytest-html
       - run: |
           cd appointment-service
-          uv run pytest unit_test.py -v --tb=short \
+          uv run pytest service_test.py -v --tb=short \
             --junit-xml=pytest-results.xml \
             --html=report.html --self-contained-html
       - uses: actions/upload-artifact@v4
