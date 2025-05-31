@@ -160,3 +160,7 @@ Terraform stubs in `.iac/` for future infrastructure.
 
 All container images built for this project are available at:  
 [https://hub.docker.com/u/ialemusm](https://hub.docker.com/u/ialemusm)
+
+## CI/CD Pipelines Overview
+
+[Check out this section about GitHub Actions workflows](.github/workflows) are used to ensure quality, containerization, and deployment across the system's components.
