@@ -53,6 +53,7 @@ Terraform stubs in `.iac/` for future infrastructure.
 ### Testing Reports
 
 - Api Gateway: [api-gateway/report.html](https://devops-2025i.github.io/salus-healthcare/api-gateway/report.html)
+- Appointment Service: [appointment-service/report.html](https://devops-2025i.github.io/salus-healthcare/appointment-service/report.html)
 
 ---
 
