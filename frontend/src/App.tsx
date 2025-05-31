@@ -15,7 +15,8 @@ interface Appointment {
   updated_at: string;
 }
 
-const API_GATEWAY_URL = import.meta.env.VITE_API_GATEWAY_URL;
+const API_GATEWAY_URL =
+  import.meta.env?.VITE_API_GATEWAY_URL || process.env.VITE_API_GATEWAY_URL || '';
 
 const initialForm = {
   patient_name: '',
