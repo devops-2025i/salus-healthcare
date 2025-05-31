@@ -60,7 +60,7 @@ jobs:
           name: report-html
           path: api-gateway/report.html
 
-  deploy:
+  deploy-results:
     runs-on: ubuntu-latest
     needs: test
     if: github.ref == 'refs/heads/master'
