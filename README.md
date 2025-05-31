@@ -50,6 +50,10 @@ GitHub Actions in `.github/workflows/` build and lint all services.
 
 Terraform stubs in `.iac/` for future infrastructure.
 
+### Testing Reports
+
+- Api Gateway: [api-gateway/report.html](https://devops-2025i.github.io/salus-healthcare/api-gateway/report.html)
+
 ---
 
 ## Next Steps
