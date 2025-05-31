@@ -65,6 +65,7 @@ def protected(user=Depends(verify_jwt)):  # type: ignore
 
 
 # --- Proxy to appointment-service ---
+# Delete this commentary
 
 
 @app.api_route(
