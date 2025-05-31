@@ -59,6 +59,9 @@ Deliver a Minimum Viable Product (MVP) that demonstrates a cloud migration strat
     - Implement Infrastructure as Code (IaC) for reproducible environments.
     - Provide initial observability (logging and monitoring) capabilities.
 
+## Business Case Exploration
+
+![business](assets/DevOps%20Business%20Case.png)
 
 ## Solution Architecture
 
