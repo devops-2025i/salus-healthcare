@@ -21,7 +21,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  test:
+  test_and_lint:
     runs-on: ubuntu-latest
     
     steps:
@@ -65,7 +65,7 @@ jobs:
 
   deploy-results:
     runs-on: ubuntu-latest
-    needs: test
+    needs: test_and_lint
     if: github.ref == 'refs/heads/master'
     steps:
       - uses: actions/checkout@v4
