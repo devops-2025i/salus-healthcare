@@ -44,7 +44,7 @@ jobs:
         working-directory: ./frontend
 
       - name: Run tests with coverage
-        run: npm run test:ci
+        run: npm run test
         working-directory: ./frontend
 
       - name: Create test summary
