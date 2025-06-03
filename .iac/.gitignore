@@ -1,0 +1,32 @@
+# General system files
+.DS_Store
+Thumbs.db
+
+# Terraform state
+*.tfstate
+*.tfstate.backup
+
+# Crash log files
+crash.log
+
+# Terraform plan output
+*.tfplan
+
+# .terraform directory (module/cache/plugins)
+.terraform/
+
+# Sensitive variable overrides
+*.tfvars
+*.tfvars.json
+
+# Override files with secrets or local envs
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Local execution artifacts
+.terraform.lock.hcl
+
+# Terraform state lock file
+.terraform.tfstate.lock.info
