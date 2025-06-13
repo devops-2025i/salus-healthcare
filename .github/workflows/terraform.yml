@@ -40,5 +40,5 @@ jobs:
         run: terraform plan -var "subscription_id=${{ secrets.AZURE_SUBSCRIPTION_ID }}"
 
       - name: Terraform Apply
-        if: ${{ github.ref == 'refs/heads/main' }}
+        if: ${{ github.ref == 'refs/heads/master' }}
         run: terraform apply -auto-approve -var "subscription_id=${{ secrets.AZURE_SUBSCRIPTION_ID }}"
