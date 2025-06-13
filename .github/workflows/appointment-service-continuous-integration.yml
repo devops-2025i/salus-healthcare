@@ -1,10 +1,10 @@
-name: Appointment Service Lint, Test & Publish
+name: Appointment Service Continuous Integration
 
 on:
   push:
     paths:
       - 'appointment-service/**'
-      - '.github/workflows/appointment-lint-and-test.yml'
+      - '.github/workflows/appointment-service-continuous-integration.yml'
   pull_request:
     paths:
       - 'appointment-service/**'
