@@ -1,0 +1,76 @@
+name: API Gateway Deployment
+
+on:
+  push:
+    paths:
+      - 'api-gateway/**'
+      - '.github/workflows/gateway-deployment.yml'
+    branches-ignore: [ master ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+      - run: |
+          cd api-gateway
+          uv venv
+          uv pip install -r requirements.txt pytest-html
+      - run: |
+          cd api-gateway
+          uv run pytest unit_test.py -v --tb=short \
+            --junit-xml=pytest-results.xml \
+            --html=report.html --self-contained-html
+
+  build-and-push:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./api-gateway
+          file: ./api-gateway/Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/salus-api-gateway:latest
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build-and-push
+
+    environment:
+      name: apply-approval
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+            app-name: salus-api-gateway
+            resource-group-name: salus-rg
+            images: ${{ secrets.DOCKERHUB_USERNAME }}/salus-api-gateway:latest
