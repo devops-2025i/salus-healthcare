@@ -6,6 +6,7 @@ on:
       - 'appointment-service/**'
       - '.github/workflows/appointment-service-deployment.yml'
     branches: [ master ]
+  workflow_dispatch:
 
 jobs:
   test:
