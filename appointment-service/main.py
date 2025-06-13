@@ -16,6 +16,37 @@ import os
 import enum
 from typing import Optional, Generator, List
 from pydantic import EmailStr
+import logging
+from opentelemetry import trace
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
+from opentelemetry.sdk.resources import SERVICE_NAME, Resource
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+from opentelemetry.sdk._logs import LoggingHandler, LoggerProvider
+from opentelemetry.sdk._logs.export import BatchLogRecordProcessor, OTLPLogExporter
+
+# Logger configuration
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("appointment-service")
+
+# OpenTelemetry Tracing configuration
+resource = Resource(attributes={SERVICE_NAME: "appointment-service"})
+trace.set_tracer_provider(TracerProvider(resource=resource))
+tracer = trace.get_tracer(__name__)
+
+otlp_exporter = OTLPSpanExporter()
+span_processor = BatchSpanProcessor(otlp_exporter)
+trace.get_tracer_provider().add_span_processor(span_processor)
+
+logger_provider = LoggerProvider(resource=resource)
+log_exporter = OTLPLogExporter()
+log_processor = BatchLogRecordProcessor(log_exporter)
+logger_provider.add_log_record_processor(log_processor)
+otel_handler = LoggingHandler(level=logging.INFO, logger_provider=logger_provider)
+logging.getLogger().addHandler(otel_handler)
+
 
 # Database configuration
 DB_HOST = os.getenv("DB_HOST", "localhost")
@@ -29,6 +60,7 @@ DATABASE_URL = f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(bind=engine)
 Base = declarative_base()
+SQLAlchemyInstrumentor().instrument(engine=engine)
 
 
 class AppointmentStatus(enum.Enum):
@@ -56,6 +88,7 @@ class Appointment(Base):
 
 
 app = FastAPI(title="Appointment Service", version="1.0.0")
+FastAPIInstrumentor.instrument_app(app)
 
 
 # Pydantic models
@@ -105,60 +138,76 @@ def get_db() -> Generator[Session, None, None]:
 def create_appointment(
     appointment: AppointmentCreate, db: Session = Depends(get_db)
 ) -> AppointmentOut:
-    db_appointment = Appointment(**appointment.model_dump())
-    db.add(db_appointment)
-    db.commit()
-    db.refresh(db_appointment)
-    return AppointmentOut.model_validate(db_appointment)
+    logger.info("Creating appointment for %s", appointment.patient_email)
+    with tracer.start_as_current_span("create_appointment"):
+        db_appointment = Appointment(**appointment.model_dump())
+        db.add(db_appointment)
+        db.commit()
+        db.refresh(db_appointment)
+        logger.info("Appointment created with id %s", db_appointment.id)
+        return AppointmentOut.model_validate(db_appointment)
 
 
 @app.get("/appointments/", response_model=List[AppointmentOut])
 def list_appointments(db: Session = Depends(get_db)) -> List[AppointmentOut]:
-    appointments = db.query(Appointment).all()
-    return [AppointmentOut.model_validate(appt) for appt in appointments]
+    logger.info("Listing all appointments")
+    with tracer.start_as_current_span("list_appointments"):
+        appointments = db.query(Appointment).all()
+        return [AppointmentOut.model_validate(appt) for appt in appointments]
 
 
 @app.get("/appointments/{appointment_id}", response_model=AppointmentOut)
 def get_appointment(
     appointment_id: int = Path(..., gt=0), db: Session = Depends(get_db)
 ) -> AppointmentOut:
-    appt = db.query(Appointment).filter(Appointment.id == appointment_id).first()
-    if not appt:
-        raise HTTPException(status_code=404, detail="Appointment not found")
-    return AppointmentOut.model_validate(appt)
+    logger.info("Getting appointment with id %s", appointment_id)
+    with tracer.start_as_current_span("get_appointment"):
+        appt = db.query(Appointment).filter(Appointment.id == appointment_id).first()
+        if not appt:
+            logger.warning("Appointment with id %s not found", appointment_id)
+            raise HTTPException(status_code=404, detail="Appointment not found")
+        return AppointmentOut.model_validate(appt)
 
 
 @app.put("/appointments/{appointment_id}", response_model=AppointmentOut)
 def update_appointment(
     appointment_id: int, appointment: AppointmentUpdate, db: Session = Depends(get_db)
 ) -> AppointmentOut:
-    db_appointment = (
-        db.query(Appointment).filter(Appointment.id == appointment_id).first()
-    )
-    if not db_appointment:
-        raise HTTPException(status_code=404, detail="Appointment not found")
+    logger.info("Updating appointment with id %s", appointment_id)
+    with tracer.start_as_current_span("update_appointment"):
+        db_appointment = (
+            db.query(Appointment).filter(Appointment.id == appointment_id).first()
+        )
+        if not db_appointment:
+            logger.warning("Appointment with id %s not found", appointment_id)
+            raise HTTPException(status_code=404, detail="Appointment not found")
 
-    for field, value in appointment.model_dump(exclude_unset=True).items():
-        setattr(db_appointment, field, value)
+        for field, value in appointment.model_dump(exclude_unset=True).items():
+            setattr(db_appointment, field, value)
 
-    db.commit()
-    db.refresh(db_appointment)
-    return AppointmentOut.model_validate(db_appointment)
+        db.commit()
+        db.refresh(db_appointment)
+        logger.info("Appointment with id %s updated", appointment_id)
+        return AppointmentOut.model_validate(db_appointment)
 
 
 @app.delete("/appointments/{appointment_id}")
 def delete_appointment(
     appointment_id: int, db: Session = Depends(get_db)
 ) -> dict[str, bool]:
-    db_appointment = (
-        db.query(Appointment).filter(Appointment.id == appointment_id).first()
-    )
-    if not db_appointment:
-        raise HTTPException(status_code=404, detail="Appointment not found")
+    logger.info("Deleting appointment with id %s", appointment_id)
+    with tracer.start_as_current_span("delete_appointment"):
+        db_appointment = (
+            db.query(Appointment).filter(Appointment.id == appointment_id).first()
+        )
+        if not db_appointment:
+            logger.warning("Appointment with id %s not found", appointment_id)
+            raise HTTPException(status_code=404, detail="Appointment not found")
 
-    db.delete(db_appointment)
-    db.commit()
-    return {"ok": True}
+        db.delete(db_appointment)
+        db.commit()
+        logger.info("Appointment with id %s deleted", appointment_id)
+        return {"ok": True}
 
 
 @app.get("/health")
