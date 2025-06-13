@@ -25,7 +25,8 @@ from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
 from opentelemetry.sdk._logs import LoggingHandler, LoggerProvider
-from opentelemetry.sdk._logs.export import BatchLogRecordProcessor, OTLPLogExporter
+from opentelemetry.sdk._logs.export import BatchLogRecordProcessor
+from opentelemetry.exporter.otlp.proto.http._log_exporter import OTLPLogExporter
 
 # Logger configuration
 logging.basicConfig(level=logging.INFO)
