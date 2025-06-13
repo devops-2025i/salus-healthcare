@@ -18,6 +18,9 @@ jobs:
       run:
         working-directory: .iac
 
+    environment:
+      name: apply-approval
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -36,12 +39,6 @@ jobs:
 
       - name: Terraform Plan
         run: terraform plan -var "subscription_id=${{ secrets.AZURE_SUBSCRIPTION_ID }}"
-
-      - name: Wait for approval before apply
-        uses: chrnorm/deployment-approval-action@v1
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          environment: production
 
       - name: Azure Login
         uses: azure/login@v2
