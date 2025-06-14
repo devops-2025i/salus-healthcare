@@ -1,21 +1,9 @@
-from fastapi import FastAPI, HTTPException, Depends, Path
-from pydantic import BaseModel, ConfigDict
-from sqlalchemy import (
-    create_engine,
-    Column,
-    Integer,
-    String,
-    DateTime,
-    Enum,
-    Text,
-    TIMESTAMP,
-)
-from sqlalchemy.orm import sessionmaker, declarative_base, Session
+import mysql.connector
+from fastapi import FastAPI, HTTPException, Path
+from pydantic import BaseModel, ConfigDict, EmailStr
 import datetime
 import os
-import enum
-from typing import Optional, Generator, List
-from pydantic import EmailStr
+from typing import Optional, List
 
 # Database configuration
 DB_HOST = os.getenv("DB_HOST", "localhost")
@@ -23,42 +11,21 @@ DB_PORT = os.getenv("DB_PORT", "3306")
 DB_NAME = os.getenv("DB_NAME", "appointments_db")
 DB_USER = os.getenv("DB_USER", "appuser")
 DB_PASSWORD = os.getenv("DB_PASSWORD", "apppassword")
-DATABASE_URL = f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
-
-# Solo crear engine y base, NO crear tablas automáticamente
-engine = create_engine(DATABASE_URL)
-SessionLocal = sessionmaker(bind=engine)
-Base = declarative_base()
 
 
-class AppointmentStatus(enum.Enum):
-    scheduled = "scheduled"
-    cancelled = "cancelled"
-    completed = "completed"
-    rescheduled = "rescheduled"
-
-
-class Appointment(Base):
-    __tablename__ = "appointments"
-
-    id = Column(Integer, primary_key=True, index=True)
-    patient_name = Column(String(100), nullable=False)
-    patient_email = Column(String(100), nullable=False)
-    doctor_name = Column(String(100), nullable=False)
-    doctor_specialty = Column(String(100), nullable=False)
-    appointment_time = Column(DateTime, nullable=False)
-    status = Column(Enum(AppointmentStatus), default=AppointmentStatus.scheduled)
-    notes = Column(Text)
-    created_at = Column(TIMESTAMP, server_default="CURRENT_TIMESTAMP")
-    updated_at = Column(
-        TIMESTAMP, server_default="CURRENT_TIMESTAMP", onupdate="CURRENT_TIMESTAMP"
+def get_connection():
+    return mysql.connector.connect(
+        host=DB_HOST,
+        port=DB_PORT,
+        user=DB_USER,
+        password=DB_PASSWORD,
+        database=DB_NAME,
     )
 
 
 app = FastAPI(title="Appointment Service", version="1.0.0")
 
 
-# Pydantic models
 class AppointmentBase(BaseModel):
     patient_name: str
     patient_email: EmailStr
@@ -91,73 +58,102 @@ class AppointmentOut(AppointmentBase):
     model_config = ConfigDict(from_attributes=True)
 
 
-# Database dependency
-def get_db() -> Generator[Session, None, None]:
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-
-# API endpoints
 @app.post("/appointments/", response_model=AppointmentOut)
-def create_appointment(
-    appointment: AppointmentCreate, db: Session = Depends(get_db)
-) -> AppointmentOut:
-    db_appointment = Appointment(**appointment.model_dump())
-    db.add(db_appointment)
-    db.commit()
-    db.refresh(db_appointment)
-    return AppointmentOut.model_validate(db_appointment)
+def create_appointment(appointment: AppointmentCreate) -> AppointmentOut:
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    query = ("""
+        INSERT INTO appointments (
+             patient_name, patient_email, doctor_name, doctor_specialty,
+             appointment_time, status, notes, created_at, updated_at)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
+    """)
+    values = (
+        appointment.patient_name,
+        appointment.patient_email,
+        appointment.doctor_name,
+        appointment.doctor_specialty,
+        appointment.appointment_time,
+        appointment.status,
+        appointment.notes,
+    )
+    cursor.execute(query, values)
+    conn.commit()
+    appointment_id = cursor.lastrowid
+    cursor.execute("SELECT * FROM appointments WHERE id = %s", (appointment_id,))
+    row = cursor.fetchone()
+    cursor.close()
+    conn.close()
+    if not row:
+        raise HTTPException(status_code=500, detail="Failed to create appointment")
+    return AppointmentOut(**row)
 
 
 @app.get("/appointments/", response_model=List[AppointmentOut])
-def list_appointments(db: Session = Depends(get_db)) -> List[AppointmentOut]:
-    appointments = db.query(Appointment).all()
-    return [AppointmentOut.model_validate(appt) for appt in appointments]
+def list_appointments() -> List[AppointmentOut]:
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM appointments")
+    rows = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return [AppointmentOut(**row) for row in rows]
 
 
 @app.get("/appointments/{appointment_id}", response_model=AppointmentOut)
-def get_appointment(
-    appointment_id: int = Path(..., gt=0), db: Session = Depends(get_db)
-) -> AppointmentOut:
-    appt = db.query(Appointment).filter(Appointment.id == appointment_id).first()
-    if not appt:
+def get_appointment(appointment_id: int = Path(..., gt=0)) -> AppointmentOut:
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM appointments WHERE id = %s", (appointment_id,))
+    row = cursor.fetchone()
+    cursor.close()
+    conn.close()
+    if not row:
         raise HTTPException(status_code=404, detail="Appointment not found")
-    return AppointmentOut.model_validate(appt)
+    return AppointmentOut(**row)
 
 
 @app.put("/appointments/{appointment_id}", response_model=AppointmentOut)
-def update_appointment(
-    appointment_id: int, appointment: AppointmentUpdate, db: Session = Depends(get_db)
-) -> AppointmentOut:
-    db_appointment = (
-        db.query(Appointment).filter(Appointment.id == appointment_id).first()
-    )
-    if not db_appointment:
+def update_appointment(appointment_id: int, appointment: AppointmentUpdate) -> AppointmentOut:
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM appointments WHERE id = %s", (appointment_id,))
+    row = cursor.fetchone()
+    if not row:
+        cursor.close()
+        conn.close()
         raise HTTPException(status_code=404, detail="Appointment not found")
-
+    fields = []
+    values = []
     for field, value in appointment.model_dump(exclude_unset=True).items():
-        setattr(db_appointment, field, value)
-
-    db.commit()
-    db.refresh(db_appointment)
-    return AppointmentOut.model_validate(db_appointment)
+        fields.append(f"{field} = %s")
+        values.append(value)
+    if fields:
+        update_query = f"UPDATE appointments SET {', '.join(fields)}, updated_at = NOW() WHERE id = %s"
+        values.append(appointment_id)
+        cursor.execute(update_query, tuple(values))
+        conn.commit()
+    cursor.execute("SELECT * FROM appointments WHERE id = %s", (appointment_id,))
+    updated_row = cursor.fetchone()
+    cursor.close()
+    conn.close()
+    return AppointmentOut(**updated_row)
 
 
 @app.delete("/appointments/{appointment_id}")
-def delete_appointment(
-    appointment_id: int, db: Session = Depends(get_db)
-) -> dict[str, bool]:
-    db_appointment = (
-        db.query(Appointment).filter(Appointment.id == appointment_id).first()
-    )
-    if not db_appointment:
+def delete_appointment(appointment_id: int) -> dict[str, bool]:
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id FROM appointments WHERE id = %s", (appointment_id,))
+    row = cursor.fetchone()
+    if not row:
+        cursor.close()
+        conn.close()
         raise HTTPException(status_code=404, detail="Appointment not found")
-
-    db.delete(db_appointment)
-    db.commit()
+    cursor.execute("DELETE FROM appointments WHERE id = %s", (appointment_id,))
+    conn.commit()
+    cursor.close()
+    conn.close()
     return {"ok": True}
 
 
@@ -165,7 +161,4 @@ def delete_appointment(
 def health_check() -> dict[str, str]:
     return {"status": "ok"}
 
-
-# Solo crear tablas si se ejecuta directamente (no en tests)
-if __name__ == "__main__":
-    Base.metadata.create_all(bind=engine)
+# Nota: Ya no se crean tablas automáticamente, debes crearlas manualmente en la base de datos.
