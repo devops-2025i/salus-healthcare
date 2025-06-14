@@ -4,10 +4,16 @@ variable "resource_group_name" {
   default     = "salus-rg"
 }
 
-variable "location" {
-  description = "Ubicación de los recursos de Azure."
+variable "rg_location" {
+  description = "Resource group location."
   type        = string
-  default     = "East US"
+  default     = "West US"
+}
+
+variable "db_location" {
+  description = "Databases group location."
+  type        = string
+  default     = "Central US"
 }
 
 variable "app_service_plan_name" {

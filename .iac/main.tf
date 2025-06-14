@@ -1,5 +1,5 @@
 terraform {
-    backend "remote" {
+  backend "remote" {
     organization = "fund-devops-2025i"
 
     workspaces {
@@ -22,27 +22,27 @@ provider "azurerm" {
 
 resource "azurerm_resource_group" "salus" {
   name     = var.resource_group_name
-  location = var.location
+  location = var.rg_location
 }
 
 resource "azurerm_service_plan" "salus" {
   name                = var.app_service_plan_name
-  location            = azurerm_resource_group.salus.location
   resource_group_name = azurerm_resource_group.salus.name
+  location            = azurerm_resource_group.salus.location
   os_type             = "Linux"
-  sku_name            = "B1"
+  sku_name            = "F1"
 }
 
 resource "azurerm_mysql_flexible_server" "appointments" {
   name                   = "appointments-mysql"
   resource_group_name    = azurerm_resource_group.salus.name
-  location               = azurerm_resource_group.salus.location
   administrator_login    = var.appointments_mysql_admin_username
   administrator_password = var.appointments_mysql_admin_password
+  location               = var.db_location
   sku_name               = "B_Standard_B1ms"
   version                = "8.0.21"
   #zone                   = "1"
-  backup_retention_days  = 7
+  backup_retention_days        = 7
   geo_redundant_backup_enabled = false
 }
 
