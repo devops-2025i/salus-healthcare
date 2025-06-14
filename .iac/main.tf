@@ -1,4 +1,12 @@
 terraform {
+    backend "remote" {
+    organization = "fund-devops-2025i"
+
+    workspaces {
+      name = "salus-infra-dev"
+    }
+  }
+
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
@@ -10,7 +18,6 @@ terraform {
 
 provider "azurerm" {
   features {}
-  subscription_id = var.subscription_id
 }
 
 resource "azurerm_resource_group" "salus" {
