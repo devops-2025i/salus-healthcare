@@ -155,6 +155,54 @@ Key features:
 
 ![tf-cloud](/assets/tf-cloud.png)
 
+## Observability and Monitoring
+
+Salus Healthcare implements comprehensive observability using Prometheus for metrics collection and Grafana Cloud for visualization and alerting. This monitoring setup ensures system reliability, performance tracking, and proactive issue detection across all services.
+
+### Prometheus Integration
+
+Each microservice is instrumented with Prometheus metrics:
+
+- **Custom Metrics**: Request counters, latency histograms, and business-specific KPIs
+- **FastAPI Instrumentator**: Automatic HTTP metrics for all API endpoints
+- **Health Checks**: Service availability and dependency monitoring
+- **Container Metrics**: Resource utilization and performance data
+
+### Grafana Cloud Remote Write
+
+The system uses Prometheus remote write functionality to send metrics directly to Grafana Cloud:
+
+- **Real-time Streaming**: Metrics are continuously pushed to Grafana Cloud for centralized monitoring
+- **Long-term Storage**: Historical data retention beyond local Prometheus storage (1h local, unlimited in cloud)
+- **Multi-environment Support**: Development, staging, and production metrics in unified dashboards
+- **Secure Transport**: Encrypted transmission using API tokens and HTTPS
+
+### Configuration
+
+Metrics collection is configured through:
+- `prometheus.yml`: Remote write configuration with Grafana Cloud endpoints
+- Environment variables: API tokens and authentication credentials
+- Service instrumentation: Custom metrics definitions in each microservice
+
+### Accessing Metrics
+
+- **Local Development**: 
+  - Prometheus UI: `http://localhost:9090`
+  - Service metrics: `http://localhost:8001/metrics` (appointment service)
+  - API Gateway: `http://localhost:8000/metrics`
+
+- **Azure Production Environment**:
+  - Frontend: https://salus-frontend-2.azurewebsites.net
+  - API Gateway: https://salus-api-gateway-2.azurewebsites.net/metrics
+  - Appointment Service: https://salus-appointment-service-2.azurewebsites.net/metrics
+  - *Note: Azure App Service URLs may vary with each deployment cycle*
+
+- **Centralized Monitoring**: Grafana Cloud portal for unified dashboards and alerting
+
+### Future Enhancements
+
+*Grafana dashboard screenshots and performance analytics will be added here as the monitoring infrastructure matures.*
+
 ## CI/CD Pipelines
 
 This repository uses several GitHub Actions workflows to ensure quality, integration, deployment, and continuous delivery for the main services: Appointment Service, API Gateway, Frontend, and Azure infrastructure.
