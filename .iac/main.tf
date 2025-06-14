@@ -25,8 +25,15 @@ resource "azurerm_resource_group" "salus" {
   location = var.rg_location
 }
 
+
+resource "random_string" "asp_suffix" {
+  length  = 4
+  upper   = false
+  special = false
+}
+
 resource "azurerm_service_plan" "salus" {
-  name                = var.app_service_plan_name
+  name                = "salus-asp-${random_string.asp_suffix.result}"
   resource_group_name = azurerm_resource_group.salus.name
   location            = var.asp_location
   os_type             = "Linux"

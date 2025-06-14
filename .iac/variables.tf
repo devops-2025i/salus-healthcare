@@ -22,12 +22,6 @@ variable "db_location" {
   default     = "Central US"
 }
 
-variable "app_service_plan_name" {
-  description = "Nombre del App Service Plan."
-  type        = string
-  default     = "salus-asp-2"
-}
-
 variable "appointments_mysql_admin_username" {
   description = "MySQL admin username para appointments"
   type        = string
