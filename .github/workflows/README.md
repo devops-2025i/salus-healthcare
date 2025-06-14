@@ -1,125 +1,91 @@
 ## CI/CD Pipelines Overview
 
-The following GitHub Actions workflows are used to ensure quality, containerization, and deployment across the system's components.
+This repository uses several GitHub Actions workflows to ensure quality, integration, deployment, and continuous delivery for the main services: Appointment Service, API Gateway, Frontend, and Azure infrastructure.
 
-### 1. `appointment-lint-and-test.yml` — Lint & Test for Appointment Service
-- **Purpose:** Code quality checks and unit testing for the medical appointments microservice.
+---
+
+### 1. `appointment-service-continuous-integration.yml` — Lint & Test for Appointment Service
+- **Purpose:** Validate code quality and run unit tests for the medical appointments microservice.
 - **Triggers:**
-  - Pushes to files inside `appointment-service/`
-  - Pull requests that modify this microservice
-  - Changes to the workflow file itself
+  - Push or pull request that modifies `appointment-service/` or the workflow file itself.
 - **Features:**
   - Linting with `flake8` (critical errors and complexity)
   - Unit tests with `pytest` and HTML reports
-  - Publishes test results to GitHub Pages via the `gh-pages` branch
-  - Uses Python 3.11 with `uv` as package manager
-  - Generates XML artifacts for CI/CD integrations
+  - Uses Python 3.11 and `uv` as package manager
+  - Uploads test result artifacts
 
 ---
 
-### 2. `appointment-service-build-and-push-docker-image.yml` — Docker Build & Push (Production)
-- **Purpose:** Build and publish the production Docker image of the appointment service.
+### 2. `appointment-service-deployment.yml` — Build, Push & Deploy for Appointment Service
+- **Purpose:** Build, publish, and deploy the Appointment Service Docker image to Azure App Service.
 - **Triggers:**
-  - Pushes to the `master` branch affecting `appointment-service/`
+  - Push to the `master` branch affecting `appointment-service/`
+  - Manual execution via `workflow_dispatch`
 - **Features:**
-  - Builds with Docker Buildx
-  - Publishes to Docker Hub with `latest` tag
-  - Requires `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` secrets
-  - Runs only on the `master` branch for production releases
+  - Runs unit tests before building
+  - Builds and pushes the image to Docker Hub
+  - Deploys the image to Azure App Service using the commit tag
+  - Requires secrets: `DOCKERHUB_USERNAME`, `DOCKERHUB_TOKEN`, `AZURE_CREDENTIALS`
 
 ---
 
-### 3. `appointment-service-build-docker-image.yml` — Docker Build Validation (Development)
-- **Purpose:** Validate Docker build on development branches for the appointment service.
+### 3. `gateway-continuous-integration.yml` — Lint & Test for API Gateway
+- **Purpose:** Validate code quality and run unit tests for the API Gateway.
 - **Triggers:**
-  - Pushes to any non-`master` branch that modifies `appointment-service/`
+  - Push or pull request that modifies `api-gateway/` or the workflow file itself.
 - **Features:**
-  - Builds Docker image locally without publishing
-  - Validates `Dockerfile` and build process
-  - Uses `load: true` to load the image into the runner
-  - Allows testing containerization before merging to `master`
+  - Linting with `flake8`
+  - Unit tests with `pytest` and HTML reports
+  - Uses Python 3.11 and `uv` as package manager
+  - Uploads test result artifacts
 
 ---
 
-### 4. `deploy-azure.yml` — Azure Infrastructure Deployment with Terraform
-- **Purpose:** Automate production infrastructure deployment in Azure.
+### 4. `gateway-deployment.yml` — Build, Push & Deploy for API Gateway
+- **Purpose:** Build, publish, and deploy the API Gateway Docker image to Azure App Service.
 - **Triggers:**
-  - Scheduled: Tuesdays and Thursdays at 9 PM UTC
-  - Manual via `workflow_dispatch`
+  - Push to the `master` branch affecting `api-gateway/`
+  - Manual execution via `workflow_dispatch`
 - **Features:**
-  - Authenticates with Azure using a Service Principal
-  - Executes `terraform plan` and `apply`
-  - Deploys App Services for the frontend, API gateway, and appointment service
-  - Uses infrastructure definitions from the `.iac/` directory
-  - Requires secrets: `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID`
+  - Runs unit tests before building
+  - Builds and pushes the image to Docker Hub
+  - Deploys the image to Azure App Service using the commit tag
+  - Requires secrets: `DOCKERHUB_USERNAME`, `DOCKERHUB_TOKEN`, `AZURE_CREDENTIALS`
 
 ---
 
-### 5. `frontend-build-and-push-docker-image.yml` — Docker Build & Push for Frontend (Production)
-- **Purpose:** Build and publish the production Docker image of the React frontend.
+### 5. `frontend-continuous-integration.yml` — Lint & Test for Frontend
+- **Purpose:** Validate code quality and run tests for the React frontend.
 - **Triggers:**
-  - Pushes to the `master` branch affecting `frontend/`
+  - Push or pull request that modifies `frontend/` or the workflow file itself.
 - **Features:**
-  - Builds a production-optimized React app using Vite, TypeScript, and TailwindCSS
-  - Serves the app via Nginx as defined in the Dockerfile
-  - Publishes to Docker Hub with the `latest` tag
+  - Linting with ESLint
+  - Tests with Vitest and coverage
+  - Uses Node.js 20
+  - Uploads coverage and report artifacts
 
 ---
 
-### 6. `frontend-build-docker-image.yml` — Frontend Build Validation (Development)
-- **Purpose:** Validate frontend Docker build on development branches.
+### 6. `frontend-deployment.yml` — Build, Push & Deploy for Frontend
+- **Purpose:** Build, publish, and deploy the frontend Docker image to Azure App Service.
 - **Triggers:**
-  - Pushes to non-`master` branches modifying `frontend/`
+  - Push to the `master` branch affecting `frontend/`
+  - Manual execution via `workflow_dispatch`
 - **Features:**
-  - Installs Node.js 20 and dependencies via `npm ci`
-  - Linting with ESLint before build
-  - Builds the Docker image without pushing
-  - Ensures code quality before merging to `master`
+  - Builds and pushes the image to Docker Hub
+  - Deploys the image to Azure App Service using the commit tag
+  - Requires secrets: `DOCKERHUB_USERNAME`, `DOCKERHUB_TOKEN`, `AZURE_CREDENTIALS`
 
 ---
 
-### 7. `frontend-test-deploy.yml` — Frontend Lint & Test with Coverage
-- **Purpose:** Run full test suite with coverage reports for the frontend.
+### 7. `terraform.yml` — Infrastructure as Code (IaC) with Terraform
+- **Purpose:** Automate validation and deployment of Azure infrastructure using Terraform.
 - **Triggers:**
-  - Pushes to `main`, `master`, or `develop`
-  - Pull requests targeting `main` or `master`
+  - Push or pull request that modifies `.iac/` or the workflow file itself.
 - **Features:**
-  - Linting and tests using Vitest
-  - Generates HTML coverage reports
-  - Publishes reports to GitHub Pages under `/frontend`
-  - Uses Node.js cache to speed up builds
-  - Includes permissions required for GitHub Pages
+  - Initializes and runs `terraform plan` in the `.iac` folder
+  - Uses the `TF_API_TOKEN` for authentication
 
 ---
 
-### 8. `gateway-build-and-push-docker-image.yml` — Docker Build & Push for API Gateway (Production)
-- **Purpose:** Build and publish the API Gateway Docker image for production.
-- **Triggers:**
-  - Pushes to the `master` branch affecting `api-gateway/`
-- **Features:**
-  - FastAPI app handling JWT authentication and service proxying
-  - Publishes to Docker Hub with the `latest` tag
-
----
-
-### 9. `gateway-build-docker-image.yml` — API Gateway Docker Build Validation
-- **Purpose:** Validate Docker build for the API Gateway on development branches.
-- **Triggers:**
-  - Pushes to non-`master` branches modifying `api-gateway/`
-- **Features:**
-  - Local Docker build without publishing
-  - Validates the gateway containerization flow
-
----
-
-### 10. `gateway-lint-and-test.yml` — Lint & Test for API Gateway
-- **Purpose:** Code quality and unit testing for the API Gateway.
-- **Triggers:**
-  - Pushes to `api-gateway/`
-  - Pull requests that modify the gateway
-- **Features:**
-  - Linting with `flake8` for Python 3.11
-  - Unit tests with `pytest`, including HTTP client mocks
-  - Generates HTML test reports
-  - Publishes results to GitHub Pages under `/api-gateway`
-  - Uses `uv` for dependency management
+Each workflow is designed to run automatically on relevant changes and can also be triggered manually (when `workflow_dispatch` is present). See each YAML file for advanced details or custom inputs.
