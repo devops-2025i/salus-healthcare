@@ -135,3 +135,9 @@ resource "azurerm_linux_web_app" "appointment_service" {
 
   depends_on = [azurerm_service_plan.salus, azurerm_mysql_flexible_server.appointments]
 }
+
+resource "random_string" "demo_suffix" {
+  length  = 4
+  upper   = false
+  special = false
+}
