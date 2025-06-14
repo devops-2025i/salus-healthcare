@@ -17,6 +17,7 @@ from opentelemetry.exporter.otlp.proto.http._log_exporter import OTLPLogExporter
 from prometheus_fastapi_instrumentator import Instrumentator
 from prometheus_client import Counter, Histogram
 import time
+import functools
 
 # Logger configuration
 logging.basicConfig(level=logging.INFO)
@@ -77,6 +78,7 @@ REQUEST_LATENCY = Histogram(
 
 
 def track_metrics(endpoint_func):
+    @functools.wraps(endpoint_func)
     def wrapper(*args, **kwargs):
         method = endpoint_func.__name__
         endpoint = f"/{endpoint_func.__name__}"
