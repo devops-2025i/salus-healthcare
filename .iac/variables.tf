@@ -7,7 +7,7 @@ variable "resource_group_name" {
 variable "location" {
   description = "Ubicación de los recursos de Azure."
   type        = string
-  default     = "West US"
+  default     = "Central US"
 }
 
 variable "app_service_plan_name" {
