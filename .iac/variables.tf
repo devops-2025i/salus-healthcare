@@ -40,3 +40,23 @@ variable "appointments_mysql_database_name" {
   type        = string
   default     = "appointments_db"
 }
+
+# === VARIABLES PARA OBSERVABILIDAD ===
+variable "grafana_api_token" {
+  description = "Grafana Cloud API Token para métricas"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "grafana_prometheus_url" {
+  description = "Grafana Cloud Prometheus URL para remote write"
+  type        = string
+  default     = "https://prometheus-prod-56-prod-us-east-2.grafana.net/api/prom/push"
+}
+
+variable "grafana_prometheus_username" {
+  description = "Grafana Cloud Prometheus Username"
+  type        = string
+  default     = "2501527"
+}
