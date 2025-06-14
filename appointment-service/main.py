@@ -14,6 +14,10 @@ from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExport
 from opentelemetry.sdk._logs import LoggingHandler, LoggerProvider
 from opentelemetry.sdk._logs.export import BatchLogRecordProcessor
 from opentelemetry.exporter.otlp.proto.http._log_exporter import OTLPLogExporter
+from prometheus_fastapi_instrumentator import Instrumentator
+from prometheus_client import Counter, Histogram
+import time
+import functools
 
 # Logger configuration
 logging.basicConfig(level=logging.INFO)
@@ -57,6 +61,40 @@ def get_connection():
 app = FastAPI(title="Appointment Service", version="1.0.0")
 FastAPIInstrumentor.instrument_app(app)
 
+# Prometheus metrics integration
+Instrumentator().instrument(app).expose(app)
+
+# Prometheus custom metrics
+REQUEST_COUNT = Counter(
+    'appointment_service_requests_total',
+    'Total number of requests',
+    ['method', 'endpoint', 'http_status']
+)
+REQUEST_LATENCY = Histogram(
+    'appointment_service_request_latency_seconds',
+    'Request latency',
+    ['method', 'endpoint']
+)
+
+
+def track_metrics(endpoint_func):
+    @functools.wraps(endpoint_func)
+    def wrapper(*args, **kwargs):
+        method = endpoint_func.__name__
+        endpoint = f"/{endpoint_func.__name__}"
+        start_time = time.time()
+        try:
+            response = endpoint_func(*args, **kwargs)
+            status = getattr(response, 'status_code', 200)
+        except Exception as e:
+            status = 500
+            raise
+        finally:
+            REQUEST_COUNT.labels(method, endpoint, status).inc()
+            REQUEST_LATENCY.labels(method, endpoint).observe(time.time() - start_time)
+        return response
+    return wrapper
+
 
 class AppointmentBase(BaseModel):
     patient_name: str
@@ -91,6 +129,7 @@ class AppointmentOut(AppointmentBase):
 
 
 @app.post("/appointments/", response_model=AppointmentOut)
+@track_metrics
 def create_appointment(appointment: AppointmentCreate) -> AppointmentOut:
     logger.info("Creating appointment for %s", appointment.patient_email)
     with tracer.start_as_current_span("create_appointment"):
@@ -124,6 +163,7 @@ def create_appointment(appointment: AppointmentCreate) -> AppointmentOut:
 
 
 @app.get("/appointments/", response_model=List[AppointmentOut])
+@track_metrics
 def list_appointments() -> List[AppointmentOut]:
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
@@ -135,6 +175,7 @@ def list_appointments() -> List[AppointmentOut]:
 
 
 @app.get("/appointments/{appointment_id}", response_model=AppointmentOut)
+@track_metrics
 def get_appointment(appointment_id: int = Path(..., gt=0)) -> AppointmentOut:
     logger.info("Listing all appointments")
     with tracer.start_as_current_span("list_appointments"):
@@ -151,6 +192,7 @@ def get_appointment(appointment_id: int = Path(..., gt=0)) -> AppointmentOut:
 
 
 @app.put("/appointments/{appointment_id}", response_model=AppointmentOut)
+@track_metrics
 def update_appointment(appointment_id: int, appointment: AppointmentUpdate) -> AppointmentOut:
     logger.info("Updating appointment with id %s", appointment_id)
     with tracer.start_as_current_span("update_appointment"):
@@ -182,6 +224,7 @@ def update_appointment(appointment_id: int, appointment: AppointmentUpdate) -> A
 
 
 @app.delete("/appointments/{appointment_id}")
+@track_metrics
 def delete_appointment(appointment_id: int) -> dict[str, bool]:
     logger.info("Deleting appointment with id %s", appointment_id)
     with tracer.start_as_current_span("delete_appointment"):
