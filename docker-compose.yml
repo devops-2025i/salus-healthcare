@@ -12,15 +12,15 @@ services:
     build:
       context: ./api-gateway
     ports:
-      - "8000:8000"
+      - "8000:80"
     environment:
-      - APPOINTMENT_SERVICE_URL=http://appointment-service:8001
+      - APPOINTMENT_SERVICE_URL=http://appointment-service:80
 
   appointment-service:
     build:
       context: ./appointment-service
     ports:
-      - "8001:8001"
+      - "8001:80"
     environment:
       - DB_HOST=mysql
       - DB_PORT=3306
@@ -45,4 +45,4 @@ services:
       - ./appointment-service/mysql-init:/docker-entrypoint-initdb.d
 
 # volumes:
-#   mysql-data: 
+#   mysql-data:

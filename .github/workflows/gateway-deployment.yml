@@ -6,6 +6,7 @@ on:
       - 'api-gateway/**'
       - '.github/workflows/gateway-deployment.yml'
     branches: [ master ]
+  workflow_dispatch:
 
 jobs:
   test:

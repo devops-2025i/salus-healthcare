@@ -3,4 +3,6 @@ WORKDIR /app
 COPY . .
 RUN pip install uv
 RUN uv pip install --system -r requirements.txt
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8001"]
+
+EXPOSE 80
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80"]
