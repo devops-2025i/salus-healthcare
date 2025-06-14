@@ -6,6 +6,15 @@ mkdir -p /app/prometheus_data
 # Sustituir variables de entorno en el archivo de configuración de Prometheus
 envsubst < /app/prometheus.yml > /app/prometheus_config.yml
 
+echo "Configuración de Prometheus generada:"
+cat /app/prometheus_config.yml
+
+# Verificar que las variables de entorno estén configuradas
+if [ -z "$GRAFANA_API_TOKEN" ]; then
+    echo "Warning: GRAFANA_API_TOKEN no está configurado"
+    echo "Se iniciará Prometheus solo con almacenamiento local"
+fi
+
 # Iniciar Prometheus en segundo plano
 prometheus \
   --config.file=/app/prometheus_config.yml \

@@ -14,7 +14,3 @@ remote_write:
     basic_auth:
       username: ${GRAFANA_PROMETHEUS_USERNAME}
       password: ${GRAFANA_API_TOKEN}
-    queue_config:
-      max_samples_per_send: 1000
-      max_shards: 200
-      capacity: 2500
