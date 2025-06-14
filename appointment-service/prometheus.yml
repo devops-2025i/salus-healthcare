@@ -1,0 +1,20 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'appointment-service'
+    static_configs:
+      - targets: ['localhost:80']
+    metrics_path: /metrics
+    scrape_interval: 5s
+
+remote_write:
+  - url: ${GRAFANA_PROMETHEUS_URL}
+    basic_auth:
+      username: ${GRAFANA_PROMETHEUS_USERNAME}
+      password: ${GRAFANA_API_TOKEN}
+    queue_config:
+      max_samples_per_send: 1000
+      max_shards: 200
+      capacity: 2500

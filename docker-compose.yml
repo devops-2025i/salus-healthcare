@@ -21,12 +21,19 @@ services:
       context: ./appointment-service
     ports:
       - "8001:80"
+      - "9090:9090"  # Puerto para Prometheus
     environment:
       - DB_HOST=mysql
       - DB_PORT=3306
       - DB_NAME=appointments_db
       - DB_USER=appuser
       - DB_PASSWORD=apppassword
+      # Grafana Cloud Configuration
+      - GRAFANA_API_TOKEN=${GRAFANA_API_TOKEN}
+      - GRAFANA_PROMETHEUS_URL=${GRAFANA_PROMETHEUS_URL}
+      - GRAFANA_PROMETHEUS_USERNAME=${GRAFANA_PROMETHEUS_USERNAME}
+    env_file:
+      - ./appointment-service/.env
     depends_on:
       - mysql
 
