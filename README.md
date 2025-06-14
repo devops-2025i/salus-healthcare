@@ -199,9 +199,22 @@ Metrics collection is configured through:
 
 - **Centralized Monitoring**: Grafana Cloud portal for unified dashboards and alerting
 
-### Future Enhancements
 
-*Grafana dashboard screenshots and performance analytics will be added here as the monitoring infrastructure matures.*
+### Metrics Dashboard in Grafana Cloud
+
+![metrics-dashboard](assets/metrics-grafana.png)
+
+### Traces Dashboard in Grafana Cloud
+
+![traces-dashboard](assets/traces-grafana.png)
+
+### PagerDuty Integration With Grafana Cloud
+
+![PagerDuty Integration](assets/pager-duty-integration.png)
+
+![PagerDuty Alert Dashboard](assets/pager-duty-dashboard.png)
+
+![PagerDuty Alert](assets/pager-duty-notification.png)
 
 ## CI/CD Pipelines
 
