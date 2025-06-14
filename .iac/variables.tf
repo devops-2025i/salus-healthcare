@@ -10,6 +10,12 @@ variable "rg_location" {
   default     = "West US"
 }
 
+variable "asp_location" {
+  description = "Resource group location."
+  type        = string
+  default     = "West US"
+}
+
 variable "db_location" {
   description = "Databases group location."
   type        = string
@@ -19,7 +25,7 @@ variable "db_location" {
 variable "app_service_plan_name" {
   description = "Nombre del App Service Plan."
   type        = string
-  default     = "salus-asp"
+  default     = "salus-asp-2"
 }
 
 variable "appointments_mysql_admin_username" {

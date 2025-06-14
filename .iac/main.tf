@@ -28,13 +28,13 @@ resource "azurerm_resource_group" "salus" {
 resource "azurerm_service_plan" "salus" {
   name                = var.app_service_plan_name
   resource_group_name = azurerm_resource_group.salus.name
-  location            = azurerm_resource_group.salus.location
+  location            = var.asp_location
   os_type             = "Linux"
   sku_name            = "F1"
 }
 
 resource "azurerm_mysql_flexible_server" "appointments" {
-  name                   = "appointments-mysql"
+  name                   = "appointments-mysql-2"
   resource_group_name    = azurerm_resource_group.salus.name
   administrator_login    = var.appointments_mysql_admin_username
   administrator_password = var.appointments_mysql_admin_password
@@ -63,12 +63,12 @@ resource "azurerm_mysql_flexible_server_firewall_rule" "allow_azure_services" {
   start_ip_address    = "0.0.0.0"
   end_ip_address      = "0.0.0.0"
 
-  depends_on = [azurerm_mysql_flexible_server.appointments]
+  depends_on = [azurerm_mysql_flexible_server.appointments, azurerm_mysql_flexible_database.appointments]
 }
 
 resource "azurerm_linux_web_app" "frontend" {
-  name                = "salus-frontend"
-  location            = azurerm_resource_group.salus.location
+  name                = "salus-frontend-2"
+  location            = azurerm_service_plan.salus.location
   resource_group_name = azurerm_resource_group.salus.name
   service_plan_id     = azurerm_service_plan.salus.id
 
@@ -85,8 +85,8 @@ resource "azurerm_linux_web_app" "frontend" {
 }
 
 resource "azurerm_linux_web_app" "gateway" {
-  name                = "salus-api-gateway"
-  location            = azurerm_resource_group.salus.location
+  name                = "salus-api-gateway-2"
+  location            = azurerm_service_plan.salus.location
   resource_group_name = azurerm_resource_group.salus.name
   service_plan_id     = azurerm_service_plan.salus.id
 
@@ -103,8 +103,8 @@ resource "azurerm_linux_web_app" "gateway" {
 }
 
 resource "azurerm_linux_web_app" "appointment_service" {
-  name                = "salus-appointment-service"
-  location            = azurerm_resource_group.salus.location
+  name                = "salus-appointment-service-2"
+  location            = azurerm_service_plan.salus.location
   resource_group_name = azurerm_resource_group.salus.name
   service_plan_id     = azurerm_service_plan.salus.id
 
