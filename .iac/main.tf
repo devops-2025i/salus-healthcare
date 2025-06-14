@@ -57,8 +57,8 @@ resource "azurerm_mysql_flexible_database" "appointments" {
   name                = var.appointments_mysql_database_name
   resource_group_name = azurerm_resource_group.salus.name
   server_name         = azurerm_mysql_flexible_server.appointments.name
-  charset             = "utf8"
-  collation           = "utf8_unicode_ci"
+  charset   = "utf8mb3"
+  collation = "utf8mb3_unicode_ci"
 
   depends_on = [azurerm_mysql_flexible_server.appointments]
 }
