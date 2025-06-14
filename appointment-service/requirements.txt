@@ -5,6 +5,7 @@ certifi==2025.4.26
 charset-normalizer==3.4.2
 click==8.2.1
 colorama==0.4.6
+cryptography==45.0.3
 dnspython==2.7.0
 ecdsa==0.19.1
 email_validator==2.2.0

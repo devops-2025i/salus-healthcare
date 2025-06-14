@@ -70,7 +70,7 @@ resource "azurerm_linux_web_app" "frontend" {
   }
 
   app_settings = {
-    DOCKER_CUSTOM_IMAGE_NAME = "ialemusm/salus-frontend:latest"
+    # DOCKER_CUSTOM_IMAGE_NAME = "ialemusm/salus-frontend:latest"
     API_GATEWAY_URL = "https://${azurerm_linux_web_app.gateway.default_hostname}"
   }
 
@@ -88,7 +88,7 @@ resource "azurerm_linux_web_app" "gateway" {
   }
 
   app_settings = {
-    DOCKER_CUSTOM_IMAGE_NAME = "ialemusm/salus-api-gateway:latest"
+    # DOCKER_CUSTOM_IMAGE_NAME = "ialemusm/salus-api-gateway:latest"
     APPOINTMENT_SERVICE_URL = "https://${azurerm_linux_web_app.appointment_service.default_hostname}"
   }
 
@@ -106,7 +106,7 @@ resource "azurerm_linux_web_app" "appointment_service" {
   }
 
   app_settings = {
-    DOCKER_CUSTOM_IMAGE_NAME = "ialemusm/salus-appointment-service:latest"
+    # DOCKER_CUSTOM_IMAGE_NAME = "ialemusm/salus-appointment-service:latest"
     DB_HOST     = azurerm_mysql_flexible_server.appointments.fqdn
     DB_PORT     = "3306"
     DB_NAME     = var.appointments_mysql_database_name
