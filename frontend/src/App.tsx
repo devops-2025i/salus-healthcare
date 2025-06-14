@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import type { FormEvent } from 'react';
-import './App.css';
 
 interface Appointment {
   id: number;
@@ -125,7 +124,7 @@ function App() {
 
   if (!token) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-100">
+      <div className="flex h-screen items-center justify-center bg-gray-100">
         <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-sm">
           <h2 className="text-2xl font-bold mb-4 text-center">Login</h2>
           <form onSubmit={handleLogin} className="space-y-4">
@@ -257,7 +256,7 @@ function App() {
             </tbody>
           </table>
         </div>
-        <button onClick={() => setToken(null)} className="mt-6 w-full bg-gray-300 hover:bg-gray-400 text-gray-800 py-2 rounded transition">Logout</button>
+        <button onClick={() => setToken(null)} className="text-white mt-6 w-full bg-gray-300 hover:bg-gray-400 text-gray-800 py-2 rounded transition">Logout</button>
       </div>
     </div>
   );

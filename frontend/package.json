@@ -13,6 +13,7 @@
     "test:ci": "vitest run --config vitest.config.ts --reporter=verbose --coverage"
   },
   "dependencies": {
+    "@tailwindcss/typography": "^0.5.16",
     "@tailwindcss/vite": "^4.1.8",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
