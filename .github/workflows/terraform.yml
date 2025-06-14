@@ -34,3 +34,4 @@ jobs:
         run: terraform plan"
         env:
           TF_API_TOKEN: ${{ secrets.TF_API_TOKEN }}
+          TF_VAR_grafana_api_token: ${{ secrets.GRAFANA_API_TOKEN }}

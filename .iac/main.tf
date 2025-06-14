@@ -126,6 +126,11 @@ resource "azurerm_linux_web_app" "appointment_service" {
     DB_NAME     = var.appointments_mysql_database_name
     DB_USER     = var.appointments_mysql_admin_username
     DB_PASSWORD = var.appointments_mysql_admin_password
+    
+    # === NUEVAS VARIABLES DE OBSERVABILIDAD ===
+    GRAFANA_API_TOKEN           = var.grafana_api_token
+    GRAFANA_PROMETHEUS_URL      = var.grafana_prometheus_url
+    GRAFANA_PROMETHEUS_USERNAME = var.grafana_prometheus_username
   }
 
   depends_on = [azurerm_service_plan.salus, azurerm_mysql_flexible_server.appointments]
