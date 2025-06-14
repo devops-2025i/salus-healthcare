@@ -73,6 +73,6 @@ jobs:
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v2
         with:
-            app-name: salus-api-gateway
+            app-name: salus-api-gateway-2
             resource-group-name: salus-rg
             images: ${{ secrets.DOCKERHUB_USERNAME }}/salus-api-gateway:${{ github.sha }}
